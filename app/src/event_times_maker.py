@@ -5,6 +5,7 @@ from .calendar_parsing import get_schedule_today
 
 def event_maker():
     events = get_schedule_today()
+    print(events)
     event_times = {}
     for ev in events:
         if ev['is_all_day']: continue

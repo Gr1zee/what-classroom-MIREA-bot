@@ -1,12 +1,12 @@
 import asyncio
 from datetime import datetime, timedelta
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import Command
 from dotenv import load_dotenv
 import logging
 from os import getenv
-from src.event_times_maker import event_maker
+from app.src.event_times_maker import event_maker
 
 
 # Настройка логирования
