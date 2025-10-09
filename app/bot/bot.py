@@ -16,18 +16,13 @@ logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 BOT_TOKEN = getenv("BOT_TOKEN")
-# Список времён событий (в формате "ЧЧ:ММ")
-EVENT_TIMES = ["12:40", "17:28", "23:50"]
+EVENT_TIMES = ["12:57", "17:28", "23:50"]
 
-# Множество отправленных уведомлений: {(дата, время_события), ...}
 sent_notifications = set()
 
-# Инициализация бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# Список ID пользователей, которым отправлять уведомления
-# Можно заполнять через команду /start или из БД
 NOTIFIED_USERS = set()
 
 # Команда /start — чтобы пользователь "подписался" на уведомления
@@ -37,7 +32,6 @@ async def cmd_start(message: Message):
     NOTIFIED_USERS.add(user_id)
     await message.answer("✅ Вы подписаны на уведомления! Сообщения придут за 10 минут до событий.")
 
-# Фоновая задача: проверка времени каждую минуту
 async def notification_scheduler(event_times):
     while True:
         now = datetime.now()
@@ -45,7 +39,7 @@ async def notification_scheduler(event_times):
         tomorrow = today + timedelta(days=1)
 
         for time_str in event_times:
-            # Парсим время события
+            print(time_str)
             target_time = datetime.strptime(time_str, "%H:%M").time()
 
             # Кандидаты: сегодня и завтра
@@ -61,25 +55,22 @@ async def notification_scheduler(event_times):
             notify_time = event_dt - timedelta(minutes=10)
             notification_key = (event_dt.date(), time_str)
 
-            # Проверяем, пора ли отправлять и не отправляли ли уже
             if notify_time <= now < event_dt and notification_key not in sent_notifications:
                 sent_notifications.add(notification_key)
                 for user_id in NOTIFIED_USERS:
                     try:
                         await bot.send_message(
                             user_id,
-                            f"🔔 Напоминание!\nСобытие начнётся в {time_str}."
+                            f"🔔 Напоминание! Кабинет: {event_times[time_str]}."
                         )
                     except Exception as e:
                         logging.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
 
-        # Ждём 60 секунд перед следующей проверкой
         await asyncio.sleep(5)
 
 # Запуск бота
 async def main():
     event_times = event_maker()
-    # Запускаем фоновую задачу
+    print(event_times)
     asyncio.create_task(notification_scheduler(event_times))
-    # Запускаем polling
     await dp.start_polling(bot)
